@@ -5,6 +5,8 @@ import json
 import os
 import subprocess
 import tempfile
+import base64
+import requests
 
 # ----------------------------
 # PAGE CONFIG
@@ -324,6 +326,21 @@ def save_hash_map(data: dict) -> None:
     with open(HASH_TO_CID_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
+
+def show_pdf_from_url(url: str):
+    r = requests.get(url, timeout=20)
+    r.raise_for_status()
+    b64 = base64.b64encode(r.content).decode("utf-8")
+    pdf_html = f"""
+    <iframe
+        src="data:application/pdf;base64,{b64}"
+        width="100%"
+        height="720"
+        style="border:0; border-radius:12px; background:white;">
+    </iframe>
+    """
+    st.components.v1.html(pdf_html, height=740)
+
 # ----------------------------
 # 4) FIND ABI
 # ----------------------------
@@ -601,7 +618,7 @@ with tab_validator:
 
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
             st.markdown("##### Invoice Preview (Validator Only)")
-            st.components.v1.iframe(local_gateway_url, height=720, scrolling=True)
+            show_pdf_from_url(local_gateway_url)
 
         except Exception as e:
             st.error(f"Verification error: {e}")
